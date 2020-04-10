@@ -77,10 +77,25 @@ class MiKettle(object):
         if token is None:
             token = MiKettle.generateRandomToken()
         self._token = token
+        self._is_connected = False
+        self._is_auth = False
 
     def connect(self):
+        if self._is_connected:
+            return
+
         self._p = Peripheral(deviceAddr=self._mac, iface=self._iface)
         self._p.setDelegate(self)
+        self._is_connected = True
+
+    def disconnect(self):
+        if not self._is_connected:
+            return
+
+        self._p.disconnect()
+
+        self._is_connected = False
+        self._is_auth = False
 
     def name(self):
         """Return the name of the device."""
@@ -175,6 +190,9 @@ class MiKettle(object):
         return result
 
     def auth(self):
+        if self._is_auth:
+            return
+
         auth_service = self._p.getServiceByUUID(_UUID_SERVICE_KETTLE)
         auth_descriptors = auth_service.getDescriptors()
 
@@ -191,6 +209,8 @@ class MiKettle(object):
         self._p.writeCharacteristic(_HANDLE_AUTH, MiKettle.cipher(self._token, _KEY2), "true")
 
         self._p.readCharacteristic(_HANDLE_VERSION)
+
+        self._is_auth = True
 
     def subscribeToData(self):
         controlService = self._p.getServiceByUUID(_UUID_SERVICE_KETTLE_DATA)
