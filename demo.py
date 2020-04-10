@@ -52,6 +52,9 @@ def connect(args):
       print("Read failed")
       print(error)
 
+    kettle.disconnect()
+    print("disconnected")
+
 def main():
     """Main function.
 
